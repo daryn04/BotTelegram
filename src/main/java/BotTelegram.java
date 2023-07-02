@@ -202,6 +202,19 @@ public class BotTelegram extends TelegramLongPollingBot {
                 if (modelli.contains(data)) {
                     automobile.setNomeModello(data);
                 }
+                if (colori.contains(data)) {
+                    automobile.setColore(data);
+                }
+                if (data == "Automatico" || data == "Manuale") {
+                    automobile.setTipoDiCambio(data);
+                }
+                if (data == "Benzina" || data == "Diesel") {
+                    automobile.setAlimentazione(data);
+                }
+                if (data == "Acciaio" || data == "Lega") {
+                    automobile.setMaterialeCerchione(data);
+                }
+
             }
         }
     }
