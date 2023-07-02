@@ -1,22 +1,22 @@
 public class Automobile {
     private String targa;
+    private String costruttore;
     private String nomeModello;
     private String alimentazione;
     private String colore;
-    private String stato;
     private int prezzo;
     private String tipoDiCambio;
-    private int chilometraggio;
     private String materialeCerchione;
 
-    public Automobile(String targa, String nomeModello, String colore, String stato, int prezzo, String tipoDiCambio, int chilometraggio, String materialeCerchione){
+    public Automobile(){
+
+    }
+    public Automobile(String targa, String nomeModello, String colore, String condizione, int prezzo, String tipoDiCambio, String materialeCerchione){
         this.targa = targa;
         this.nomeModello = nomeModello;
         this.colore = colore;
-        this.stato = stato;
         this.prezzo = prezzo;
         this.tipoDiCambio = tipoDiCambio;
-        this.chilometraggio = chilometraggio;
         this.materialeCerchione = materialeCerchione;
     }
 
@@ -36,10 +36,6 @@ public class Automobile {
         return colore;
     }
 
-    public String getStato() {
-        return stato;
-    }
-
     public int getPrezzo() {
         return prezzo;
     }
@@ -48,8 +44,8 @@ public class Automobile {
         return tipoDiCambio;
     }
 
-    public int getChilometraggio() {
-        return chilometraggio;
+    public String getCostruttore(){
+        return this.costruttore;
     }
 
     public String getMaterialeCerchione() {
@@ -60,6 +56,9 @@ public class Automobile {
         this.targa = targa;
     }
 
+    public void setCostruttore(String costruttore){
+        this.costruttore = costruttore;
+    }
     public void setNomeModello(String nomeModello) {
         this.nomeModello = nomeModello;
     }
@@ -72,20 +71,12 @@ public class Automobile {
         this.colore = colore;
     }
 
-    public void setStato(String stato) {
-        this.stato = stato;
-    }
-
     public void setPrezzo(int prezzo) {
         this.prezzo = prezzo;
     }
 
     public void setTipoDiCambio(String tipoDiCambio) {
         this.tipoDiCambio = tipoDiCambio;
-    }
-
-    public void setChilometraggio(int chilometraggio) {
-        this.chilometraggio = chilometraggio;
     }
 
     public void setMaterialeCerchione(String materialeCerchione) {
