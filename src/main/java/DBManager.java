@@ -67,6 +67,23 @@ public class DBManager {
         }
         return listaModelli;
     }
+
+    public Integer prezzoModello(String modello) throws SQLException {
+        String getPrezzo = "SELECT prezzo FROM modello WHERE nome ='" + modello +"'";
+        ResultSet rs;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(getPrezzo);
+        }
+        return rs.getInt("prezzo");
+    }
+
+    public void inserisciPreventivo(String chatId, Automobile automobile) throws SQLException {
+        String preventivo = "INSERT INTO preventivo_telegram(chatID, nome_modello, alimentazione, colore, prezzo, tipo_di_cambio, materiale_cerchione) VALUES(chatID, automobile.getNomeModello(), automobile.getCostruttore(), automobile.getAlimentazione(), automobile.getColore(), automobile.getPrezzo(), automobile.getTipoDiCambio(), automobile.getMaterialeCerchione()";
+        ResultSet rs;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(preventivo);
+        }
+    }
     public ResultSet visualizzaModelli(String costruttore) throws SQLException {
         String modello = "SELECT nome FROM modello WHERE costruttore ='" + costruttore +"'";
         ResultSet rs;

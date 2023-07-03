@@ -2,7 +2,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.description.SetMyDescription;
-import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatDescription;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -22,7 +21,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.sql.ResultSet;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.sql.SQLException;
@@ -201,6 +199,11 @@ public class BotTelegram extends TelegramLongPollingBot {
                 }
                 if (modelli.contains(data)) {
                     automobile.setNomeModello(data);
+                    try {
+                        automobile.setPrezzo(dbManager.prezzoModello(data));
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 if (colori.contains(data)) {
                     automobile.setColore(data);
@@ -214,11 +217,35 @@ public class BotTelegram extends TelegramLongPollingBot {
                 if (data == "Acciaio" || data == "Lega") {
                     automobile.setMaterialeCerchione(data);
                 }
-
+                calcoloPrezzo(automobile);
+                try {
+                    dbManager.inserisciPreventivo(dataChatId, automobile);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
 
+    public void calcoloPrezzo(Automobile automobile){
+        int prezzo;
+        if (automobile.getTipoDiCambio() == "Automatico") {
+            prezzo = automobile.getPrezzo();
+            automobile.setPrezzo(prezzo + 1500);
+        }
+        if (automobile.getMaterialeCerchione() == "Lega") {
+            prezzo = automobile.getPrezzo();
+            automobile.setPrezzo(prezzo + 400);
+        }
+        if (automobile.getAlimentazione() == "Diesel") {
+            prezzo = automobile.getPrezzo();
+            automobile.setPrezzo(prezzo + 1500);
+        }
+        if (automobile.getColore() == "Rosso" || automobile.getColore() == "Blu" || automobile.getColore() == "Azzurro" || automobile.getColore() == "Verde" || automobile.getColore() == "Nero" || automobile.getColore() == "Giallo") {
+            prezzo = automobile.getPrezzo();
+            automobile.setPrezzo(prezzo + 800);
+        }
+    }
 
     public void replyCostruttori(String chatId){
         ResultSet rs;
