@@ -9,9 +9,8 @@ public class Modello {
     private int numeroPorte;
     private int velocitaMax;
     private int prezzo;
-    private boolean elettrica;
 
-    public Modello(String nome, String costruttore, int consumo, int cilindrata, int potenza, int cavalli, int numeroPosti, int numeroPorte, int velocitaMax, int prezzo, boolean elettrica) {
+    public Modello(String nome, String costruttore, int consumo, int cilindrata, int potenza, int cavalli, int numeroPosti, int numeroPorte, int velocitaMax, int prezzo) {
         this.nome = nome;
         this.costruttore = costruttore;
         this.consumo = consumo;
@@ -22,7 +21,21 @@ public class Modello {
         this.numeroPorte = numeroPorte;
         this.velocitaMax = velocitaMax;
         this.prezzo = prezzo;
-        this.elettrica = elettrica;
+    }
+
+    @Override
+    public String toString() {
+        return  "Nome: " + nome + '\n' +
+                "Costruttore: " + costruttore + '\n' +
+                "Consumo: " + consumo + " l/100 km" + '\n' +
+                "Cilindrata: " + cilindrata + " cm cubici" + '\n' +
+                "Potenza: " + potenza + '\n' + " kW" +
+                "Cavalli: " + cavalli + '\n' +
+                "Numero dei posti: " + numeroPosti + '\n' +
+                "Numero delle porte: " + numeroPorte + '\n' +
+                "Velocità massima: " + velocitaMax + " km/h" + '\n' +
+                "Prezzo: " + prezzo + "€" + '\n' ;
+
     }
 
     public String getNome() {
@@ -65,9 +78,6 @@ public class Modello {
         return prezzo;
     }
 
-    public boolean isElettrica() {
-        return elettrica;
-    }
 
     public void setNome(String nome) {
         this.nome = nome;
@@ -108,10 +118,5 @@ public class Modello {
     public void setPrezzo(int prezzo) {
         this.prezzo = prezzo;
     }
-
-    public void setElettrica(boolean elettrica) {
-        this.elettrica = elettrica;
-    }
-
 
 }

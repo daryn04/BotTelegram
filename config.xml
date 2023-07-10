@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <host>localhost</host>
+    <port>3306</port>
+    <name>Java_Project</name>
+    <username>daryn</username>
+    <password>daryn2002</password>
+</config>

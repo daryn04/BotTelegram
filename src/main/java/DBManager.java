@@ -1,47 +1,33 @@
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.sql.*;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.List;
-
 /**
  *
  * @author daryn
  */
 public class DBManager {
     private String JDBC_DRIVER;
-    private String DB_URL;
-
-    //  Database credentials
-    private String USER;
-    private String PASS;
     private Connection conn;
 
-    /**
-     * @param args the command line arguments
-     * @throws java.lang.ClassNotFoundException
-     */
-    public DBManager() throws SQLException {
+    public DBManager() {
         this.JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-        this.DB_URL = "jdbc:mariadb://localhost:3306/DB_Project";
-        this.USER = "daryn";
-        this.PASS = "daryn2002";
+    }
+
+    public void getConnection() throws SQLException {
+        ParserXML parserXML = new ParserXML();
+        parserXML.readConfigFile("./config.xml");
         try {
             Class.forName(this.getJDBC_DRIVER());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Connessione al database...");
-        try {
-            this.conn = DriverManager.getConnection(
-                    this.getDB_URL(), this.getUSER(), this.getPASS());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        System.out.println("Connessione al database..."); //jdbc:mariadb://localhost:3306/Java_Project
+        this.conn = DriverManager.getConnection(
+                   "jdbc:mariadb://" + parserXML.getHost() + ":" + parserXML.getPort() + "/" + parserXML.getName(), parserXML.getUsername(), parserXML.getPassword());
         System.out.println("Connessione al database effettuata con successo");
     }
 
@@ -68,20 +54,28 @@ public class DBManager {
         return listaModelli;
     }
 
-    public Integer prezzoModello(String modello) throws SQLException {
-        String getPrezzo = "SELECT prezzo FROM modello WHERE nome ='" + modello +"'";
+    public ResultSet prezzoModello(String modello) throws SQLException {
+        String getPrezzo = "SELECT * FROM modello WHERE nome ='" + modello +"'";
         ResultSet rs;
         try (Statement stmt = this.conn.createStatement()) {
             rs = stmt.executeQuery(getPrezzo);
         }
-        return rs.getInt("prezzo");
+        return rs;
     }
 
-    public void inserisciPreventivo(String chatId, Automobile automobile) throws SQLException {
-        String preventivo = "INSERT INTO preventivo_telegram(chatID, nome_modello, alimentazione, colore, prezzo, tipo_di_cambio, materiale_cerchione) VALUES(chatID, automobile.getNomeModello(), automobile.getCostruttore(), automobile.getAlimentazione(), automobile.getColore(), automobile.getPrezzo(), automobile.getTipoDiCambio(), automobile.getMaterialeCerchione()";
+    public void inserisciPreventivo(int userId, Automobile automobile, String date) throws SQLException {
+        String preventivo = "INSERT INTO preventivo_telegram(id_user, data_preventivo, nome_modello, alimentazione, colore, prezzo, tipo_di_cambio, materiale_cerchione) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
         ResultSet rs;
-        try (Statement stmt = this.conn.createStatement()) {
-            rs = stmt.executeQuery(preventivo);
+        try (PreparedStatement stmt = this.conn.prepareStatement(preventivo)) {
+            stmt.setInt(1, userId);
+            stmt.setDate(2, Date.valueOf(date));
+            stmt.setString(3, automobile.getNomeModello());
+            stmt.setString(4, automobile.getAlimentazione());
+            stmt.setString(5, automobile.getColore());
+            stmt.setInt(6, automobile.getPrezzo());
+            stmt.setString(7, automobile.getTipoDiCambio());
+            stmt.setString(8, automobile.getMaterialeCerchione());
+            stmt.execute();
         }
     }
     public ResultSet visualizzaModelli(String costruttore) throws SQLException {
@@ -93,80 +87,76 @@ public class DBManager {
         return rs;
     }
 
+    public ArrayList<Automobile> visualizzaAuto(String nomeModello) throws SQLException {
+        String auto = "SELECT * FROM automobile WHERE nome_modello ='" + nomeModello + "'";
+        ArrayList<Automobile> automobili = new ArrayList<>();
+        ResultSet rs;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(auto);
+        }
+        while(rs.next()){
+            Automobile automobile = new Automobile(rs.getString("targa"), rs.getString("nome_modello"), rs.getString("alimentazione"), rs.getString("colore"), rs.getString("condizione"), rs.getInt("prezzo"), rs.getString("tipo_di_cambio"), rs.getString("materiale_cerchione"));
+            automobili.add(automobile);
+        }
+        return automobili;
+    }
+
+    public ArrayList<Modello> visualizzaCaratteristicheModello(String nomeModello) throws SQLException {
+        String tuttiModelli = "SELECT * FROM modello WHERE nome ='" + nomeModello + "'";
+        ArrayList<Modello> modelli = new ArrayList<>();
+        ResultSet rs;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(tuttiModelli);
+        }
+        while(rs.next()){
+            Modello modello = new Modello(rs.getString("nome"), rs.getString("costruttore"), rs.getInt("consumo"), rs.getInt("cilindrata"), rs.getInt("potenza"), rs.getInt("cavalli"), rs.getInt("n_porte"), rs.getInt("n_posti"), rs.getInt("velocita_max"), rs.getInt("prezzo_listino"));
+            modelli.add(modello);
+        }
+        return modelli;
+    }
+
+    public boolean isElectric(String nomeModello) throws SQLException {
+        String modelloElettrico = "SELECT * FROM modello WHERE nome ='" + nomeModello + "'";
+        ResultSet rs;
+        boolean elettrica = false;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(modelloElettrico);
+            while (rs.next()) {
+                elettrica = rs.getBoolean("elettrica");
+            }
+        }
+        return elettrica;
+    }
+
+    public ModelloElettrico visualizzaModelloElettrico(String nomeModello) throws SQLException {
+        String modelloElettricoCaratteristiche = "SELECT * FROM modello JOIN modello_elettrico ON nome ='" + nomeModello +"'";
+        ResultSet rs;
+        ModelloElettrico modelloElettrico = null;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(modelloElettricoCaratteristiche);
+            while (rs.next()) {
+                modelloElettrico = new ModelloElettrico(rs.getInt("batteria_kWh"), rs.getInt("autonomia"), rs.getInt("tempo_ricarica"), rs.getString("nome"), rs.getString("costruttore"), rs.getInt("consumo"), rs.getInt("cilindrata"), rs.getInt("potenza"), rs.getInt("cavalli"), rs.getInt("n_posti"), rs.getInt("n_porte"), rs.getInt("velocita_max"), rs.getInt("prezzo_listino"));
+            }
+        }
+        return modelloElettrico;
+    }
+
+    public int numeroPreventivi() throws SQLException {
+        String numeroPreventivo = "SELECT COUNT(id_preventivo) FROM preventivo_telegram";
+        ResultSet rs;
+        int numeroPreventivi = 0;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(numeroPreventivo);
+            while (rs.next()) {
+                numeroPreventivi = rs.getInt("count(id_preventivo)");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return numeroPreventivi;
+    }
     public String getJDBC_DRIVER() {
         return JDBC_DRIVER;
     }
 
-    public String getDB_URL() {
-        return DB_URL;
-    }
-
-    public String getUSER() {
-        return USER;
-    }
-
-    public String getPASS() {
-        return PASS;
-    }
 }
-    /*
-    public static void main(String[] args) {
-        Connection conn = null;
-        Statement stmt = null;
-        try {
-            //STEP 2: Register JDBC driver
-            Class.forName("org.mariadb.jdbc.Driver");
-
-            //STEP 3: Open a connection
-            System.out.println("Connecting to a selected database...");
-            conn = DriverManager.getConnection(
-                    "jdbc:mariadb://localhost:3306/DB_Project", "root", "password");
-            System.out.println("Connected database successfully...");
-
-            //STEP 4: Execute a query
-            /*
-            stmt = conn.createStatement();
-            String sql = "SELECT DISTINCT costruttore FROM modello";
-            stmt.executeUpdate(sql);
-        } catch (SQLException se) {
-            se.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (stmt != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-            }// do nothing
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
-        }
-        System.out.println("Goodbye!");
-    }
-    */
-
-    /*
-    public Connection startConnection(){
-        try {
-            Class.forName(this.getJDBC_DRIVER());
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Connessione al database...");
-        try {
-            return this.conn = DriverManager.getConnection(
-                    this.getDB_URL(), this.getUSER(), this.getPASS());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        //System.out.println("Connessione al database effettuata con successo");
-        //System.out.println(this.conn);
-    }
-*/
-
