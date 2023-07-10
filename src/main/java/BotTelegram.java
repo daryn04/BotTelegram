@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -35,7 +34,7 @@ public class BotTelegram extends TelegramLongPollingBot {
     private Automobile automobile;
     private boolean isElectric = false;
     private HashMap<Integer, Automobile> automobileUtente = new HashMap<Integer, Automobile>();
-    private int numeroPreventivi;
+    private Update update;
 
     @Override
     public String getBotUsername() {
@@ -55,13 +54,14 @@ public class BotTelegram extends TelegramLongPollingBot {
         this.dbManager = dbManager;
         this.dbManager.getConnection();
     }
-
+    /**
+     Questo metodo inizializza il Bot con la propria descrizione, che viene visualizzata prima del suo avvio,
+     e con i propri comandi che sono resi disponibili all'interno del menù
+     * */
     public void inizializzaBot() throws TelegramApiException {
         List<BotCommand> commandsList = new ArrayList();
         commandsList.add(new BotCommand("/start", "Ciao!"));
         commandsList.add(new BotCommand("/opzioni", "Per visualizzare la lista di opzioni che puoi effettuare"));
-        //commandsList.add(new BotCommand("/marchi", "Per visualizzare la lista dei marchi disponibili"));
-        //commandsList.add(new BotCommand("/modelli", "Per visualizzare la lista dei modelli disponibili"));
         SetMyCommands setMyCommands = new SetMyCommands();
         setMyCommands.setCommands(commandsList);
         this.execute(setMyCommands);
@@ -72,7 +72,10 @@ public class BotTelegram extends TelegramLongPollingBot {
                 "Avvialo per visualizzare più in dettaglio le sue caratteristiche!");
         execute(setMyDescription);
     }
-
+    /**
+     Questo metodo permette l'invio del messaggio di benvenuto all'utente che avvia il Bot, visualizzando quindi il logo della Concessionaria
+     e il proprio messaggio di benvenuto
+     */
     private void start(String chatId) {
         String welcomeMessage = "Ciao! Sono il bot Telegram della Concessionaria HP Motors. " + "\n" +
                 "Premi /opzioni per vedere la lista di opzioni che puoi effettuare!";
@@ -124,20 +127,7 @@ public class BotTelegram extends TelegramLongPollingBot {
             throw new RuntimeException(e);
         }
     }
-/*
-    public void nascondi(String chatId) {
-        SendMessage msg = new SendMessage();
-        msg.setChatId(chatId);
-        msg.setText("Premi /opzioni per vedere le opzioni che puoi effettuare!");
-        ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove();
-        msg.setReplyMarkup(keyboardMarkup);
-        try {
-            execute(msg);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-*/
+
     private InlineKeyboardMarkup setbtn(String nome) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
@@ -247,9 +237,9 @@ public class BotTelegram extends TelegramLongPollingBot {
     /**
      Questo metodo si occupa della gestione dei messaggi ricevuti dal Bot o dei bottoni cliccati dall'utente
      */
-
     @Override
     public void onUpdateReceived(Update update) {
+        setUpdate(update);
         if (update.hasMessage()) {
             String chatId = update.getMessage().getChatId().toString();
             int userId = update.getMessage().getFrom().getId().intValue();
@@ -274,9 +264,6 @@ public class BotTelegram extends TelegramLongPollingBot {
                 this.stato = "prontaConsegna";
                 this.automobile = new Automobile();
             }
-            //else if (update.getMessage().getText().equals("/nascondi")) {
-            //    nascondi(chatId); //non funge
-            //}
         }
         else if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -405,16 +392,12 @@ public class BotTelegram extends TelegramLongPollingBot {
                         calcoloPrezzo(this.automobileUtente.get(userIdKey));
                         String date = getDate();
                         SendMessage msg = new SendMessage();
-                        SendMessage msgPreventivi = new SendMessage();
-                        msgPreventivi.setChatId(dataChatId);
                         msg.setChatId(dataChatId);
                         msg.setText("Abbiamo elaborato il tuo preventivo che ammonta a " + this.automobileUtente.get(userIdKey).getPrezzo() + " €\n"+ "Ti aspettiamo in concessionaria per concludere la pratica!" );
-                        msgPreventivi.setText("Hai effettuato il preventivo numero " + this.numeroPreventivi + "|");
                         if (this.automobileUtente.get(userIdKey).getAlimentazione() != null && this.isElectric == false) {
                             try {
                                 this.dbManager.inserisciPreventivo(userIdKey, this.automobileUtente.get(userIdKey), date);
                                 execute(msg);
-                                execute(msgPreventivi);
                                 this.automobileUtente.remove(userIdKey);
                             } catch (SQLException e) {
                                 throw new RuntimeException(e);
@@ -426,7 +409,6 @@ public class BotTelegram extends TelegramLongPollingBot {
                             try {
                                 this.dbManager.inserisciPreventivo(userIdKey, this.automobileUtente.get(userIdKey), date);
                                 execute(msg);
-                                execute(msgPreventivi);
                                 this.automobileUtente.remove(userIdKey);
                             } catch (SQLException e) {
                                 throw new RuntimeException(e);
@@ -543,6 +525,12 @@ public class BotTelegram extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
+    }
+    public Update getUpdate() {
+        return this.update;
+    }
+    public void setUpdate(Update update){
+        this.update = update;
     }
 }
 

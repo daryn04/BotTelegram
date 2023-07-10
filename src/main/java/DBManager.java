@@ -140,7 +140,7 @@ public class DBManager {
         }
         return modelloElettrico;
     }
-
+/*
     public int numeroPreventivi() throws SQLException {
         String numeroPreventivo = "SELECT COUNT(id_preventivo) FROM preventivo_telegram";
         ResultSet rs;
@@ -154,6 +154,18 @@ public class DBManager {
             throw new RuntimeException(e);
         }
         return numeroPreventivi;
+    }
+
+ */
+    public ResultSet offertaDelGiorno() throws SQLException {
+        String offertaAuto = "SELECT * FROM automobile ORDER BY rand() LIMIT 1";
+        ResultSet rs;
+        try (Statement stmt = this.conn.createStatement()) {
+            rs = stmt.executeQuery(offertaAuto);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return rs;
     }
     public String getJDBC_DRIVER() {
         return JDBC_DRIVER;

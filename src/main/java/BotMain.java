@@ -12,11 +12,18 @@ public class BotMain {
             botsApi.registerBot(bot);
             bot.startConnection();
             bot.inizializzaBot();
+            while(true) {
+                System.out.println(bot.getUpdate());
+                if(bot.getUpdate() != null) {
+                    System.out.println("ciao");
+                    break;
+                }
+            }
+            System.out.println("ciao");
+            BotThread botThread = new BotThread(bot, bot.getUpdate());
+            botThread.startThread();
         } catch (TelegramApiException e) {
             e.printStackTrace();
-        Runnable botThread = new BotThread();
-        Thread thread = new Thread(botThread);
-        thread.start();
         }
     }
 }
